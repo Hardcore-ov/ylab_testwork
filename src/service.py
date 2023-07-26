@@ -73,7 +73,7 @@ class BaseService:
         session: AsyncSession,
     ):
         subobjects = await session.execute(
-            select(self.model).where(self.model.parent_id == obj_id),
+            select(self.model).where(self.model.menu_id == obj_id),
         )
         return subobjects.scalars().all()
 
@@ -84,24 +84,33 @@ class BaseService:
         session: AsyncSession,
     ):
         new_data = obj_in.dict()
-        db_subobj = self.model(**new_data, parent_id=obj_id)
+        db_subobj = self.model(**new_data, menu_id=obj_id)
         session.add(db_subobj)
         await session.commit()
         await session.refresh(db_subobj)
         return db_subobj
 
-    async def create_from_dict(
+    async def create_dish(
         self,
-        id: str,
-        title: str,
-        description: str,
+        obj_id: str,
+        obj_in,
         session: AsyncSession,
     ):
-        db_obj = self.model(id=id, title=title, description=description)
-        session.add(db_obj)
+        new_data = obj_in.dict()
+        db_subobj = self.model(**new_data, submenu_id=obj_id)
+        session.add(db_subobj)
         await session.commit()
-        await session.refresh(db_obj)
-        return db_obj
+        await session.refresh(db_subobj)
+        return db_subobj
 
-async def menu_service(session: AsyncSession = Depends(get_async_session)):
-    return BaseService(session.execute(select()))
+    async def read_all_dishes(
+        self,
+        obj_id: str,
+        session: AsyncSession,
+    ):
+        subobjects = await session.execute(
+            select(self.model).where(self.model.submenu_id == obj_id),
+        )
+        return subobjects.scalars().all()
+
+

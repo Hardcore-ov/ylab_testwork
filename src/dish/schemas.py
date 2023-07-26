@@ -1,17 +1,14 @@
-import decimal
-
+from decimal import Decimal
 from pydantic import BaseModel
-from sqlalchemy import Numeric
 
 
 class DishBase(BaseModel):
     title: str
     description: str
-    price: float
+    price: Decimal
+
 
 class DishCreate(DishBase):
-    submenu_id = str
-
     class Config:
         json_schema_extra = {
             "example": {

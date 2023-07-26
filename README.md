@@ -7,12 +7,24 @@
 Зависимости:
 + У меню есть подменю
 + В подменю есть блюда
-+ 
+
+
 #### Запустить приложение
 
-- Клонируйте репозиторий командой <code> git clone https://github.com/Hardcore-ov/ylab_testwork.git </code>
+- Клонируйте репозиторий командой <code> git clone https://github.com/Hardcore-ov/ylab_testwork.git </code> , затем установите 
+необходимые библиотеки <code> pip install -r requirements.txt </code>
 
-- Для создания и запуска контейнеров введите команду <code> docker-compose up -d </code>
+- Перейдите в папку с репозиторием и в терминале запустите <code> python -m venv venv </code>
+
+- После установки файлов виртуального окружения запустите команду <code> source venv/bin/activate </code>
+
+- Когда запустится виртуальное окружение уже можно будет ввести последовательно команды для запуска сервера и приложения:
+
+<code> alembic upgrade head </code>
+
+<code> uvicorn src.main:app --reload </code>
+
+Сервер запущен по адресу http://127.0.0.1:8000 и можно теперь посылать API запросы.
 
 Документация доступна по адресу ```http://127.0.0.1:8000/docs```
 

@@ -29,6 +29,25 @@ class Validation:
             )
         return validation_object
 
+    async def validate_title(
+        self,
+        validation_title: str,
+        session: AsyncSession,
+    ):
+        model_name = self.model.__tablename__
+        validation_title = await session.execute(
+            select(self.model.id).where(
+                self.model.title == validation_title,
+            ),
+        )
+        validation_title = validation_title.scalars().first()
+        if validation_title is not None:
+            raise HTTPException(
+                status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+                detail=f"{model_name} с таким именем уже существует!",
+            )
+        return validation_title
+
 
 validated_menu = Validation(Menu)
 validated_submenu = Validation(Submenu)

@@ -11,7 +11,7 @@ class Menu(BaseModel):
     __tablename__ = 'menu'
 
     id = Column(String, primary_key=True, default=generate_uuid, index=True)
-    submenus = relationship('Submenu', back_populates='menu', cascade='all, delete')
+    submenus = relationship('Submenu', backref='menu', cascade='delete', lazy="selectin")
 
     submenus_count = column_property(
         select(func.count(Submenu.id)).where(Submenu.menu_id == id).scalar_subquery(),

@@ -1,12 +1,14 @@
-FROM python:3.10-slim
+FROM python:3.10.5
 
-WORKDIR /app
+WORKDIR .
 
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-COPY ./requirements.txt /app
+COPY ./requirements.txt .
 
-RUN pip3 install -r /app/requirements.txt --no-cache-dir
+RUN pip install -r requirements.txt --no-cache-dir
 
-COPY . /app/
+COPY . .
+
+CMD alembic upgrade head && uvicorn src.main:app --host 127.0.0.1 --reload
