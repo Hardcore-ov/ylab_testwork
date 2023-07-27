@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   db:
-    image: postgres:14
+    image: postgres:15.1-alpine
     volumes:
       - /var/lib/postgresql/data/
     env_file:
@@ -20,12 +20,20 @@ services:
       dockerfile: Dockerfile
     env_file:
       - .env
+    entrypoint: >
+      sh -c "
+        alembic upgrade head &&
+        uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+      "
+    restart: always
     volumes:
       - .:/app
     networks:
       - web_network
     ports:
       - 8000:8000
+    expose:
+      - 8000
     depends_on:
       - db
 
