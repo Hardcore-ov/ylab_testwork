@@ -45,7 +45,6 @@ async def get_one_dish(dish_id: str, session: AsyncSession = Depends(get_async_s
 async def get_all_dishes(session: AsyncSession = Depends(get_async_session)
                         ) -> list[DishOut]:
     service = BaseService(Dish)
-    # await validated_submenu.validate_id(submenu_id, session)
     return await service.get_many(session)
 
 

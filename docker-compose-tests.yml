@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  test_app:
+    container_name: "test_app"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    entrypoint: >
+      sh -c "
+        pytest -vv"
+    networks:
+      - test_network
+    ports:
+      - "8001:8000"
+
+networks:
+  test_network:
+    driver: bridge
