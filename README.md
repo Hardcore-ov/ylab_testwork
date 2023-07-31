@@ -21,6 +21,8 @@
 docker-compose -f docker-compose-tests.yml up
 </code>
 
+- Результат тестов будет выведен в терминале запуска докера и в самом терминале запущеного контейнера
+
 #### Запустить приложение БЕЗ использования Docker
 
 - Клонируйте репозиторий командой <code> git clone https://github.com/Hardcore-ov/ylab_testwork.git </code> , затем установите 
