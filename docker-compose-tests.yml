@@ -8,7 +8,7 @@ services:
       dockerfile: Dockerfile
     entrypoint: >
       sh -c "
-        pytest -vv"
+        pytest -v"
     networks:
       - test_network
     ports:

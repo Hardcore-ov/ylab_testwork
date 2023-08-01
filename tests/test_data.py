@@ -24,6 +24,12 @@ dish_data = {
     "price": "12.50",
 }
 
+dish_data_second = {
+    "title": "My dish 2",
+    "description": "My dish description 2",
+    "price": "57.77",
+}
+
 updated_dish_data = {
     "title": "My updated dish 1",
     "description": "My updated dish description 1",

@@ -5,7 +5,7 @@ import pytest
 import pytest_asyncio
 from httpx import AsyncClient
 from sqlalchemy import create_engine
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.orm import sessionmaker
 
 from src.config import TEST_DATABASE_URL, TEST_ASYNC_DATABASE_URL
@@ -18,17 +18,17 @@ from tests.test_data import dish_data, menu_data, submenu_data
 
 async_engine = create_async_engine(TEST_ASYNC_DATABASE_URL)
 
-TestingSessionLocal = sessionmaker(async_engine, expire_on_commit=False,
-                                   class_=AsyncSession
-                                   )
+TestingSessionLocal = async_sessionmaker(async_engine, expire_on_commit=False, class_=AsyncSession)
 
 
 async def override_db():
     async with TestingSessionLocal() as session:
         yield session
 
+app.dependency_overrides[get_async_session] = override_db
 
-@pytest_asyncio.fixture(autouse=True)
+
+@pytest_asyncio.fixture(autouse=True, scope="session")
 async def init_db():
     async with async_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
@@ -36,9 +36,15 @@ async def init_db():
     async with async_engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
 
+@pytest.fixture
+async def clear_db():
+    async with async_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+    async with async_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
 
-@pytest_asyncio.fixture(scope="session")
-def event_loop() -> Generator:
+@pytest.fixture(scope="session")
+def event_loop(request) -> Generator:
     loop = asyncio.get_event_loop_policy().new_event_loop()
     yield loop
     loop.close()
@@ -46,13 +52,12 @@ def event_loop() -> Generator:
 
 @pytest_asyncio.fixture
 async def async_client() -> AsyncClient:
-    app.dependency_overrides[get_async_session] = override_db
     async with AsyncClient(app=app, base_url="http://test") as client:
         yield client
 
+
 engine = create_engine(TEST_DATABASE_URL)
 Session = sessionmaker(bind=engine)
-
 
 def override_get_db():
     try:
@@ -74,7 +79,7 @@ def create_menu():
 
 
 @pytest.fixture
-async def create_submenu(create_menu):
+def create_submenu(create_menu):
     new_submenu = Submenu(**submenu_data, menu_id=create_menu.id)
     db.add(new_submenu)
     db.commit()
@@ -82,7 +87,7 @@ async def create_submenu(create_menu):
 
 
 @pytest.fixture
-async def create_dish(create_submenu):
+def create_dish(create_submenu):
     new_dish = Dish(**dish_data, submenu_id=create_submenu.id)
     db.add(new_dish)
     db.commit()

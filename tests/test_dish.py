@@ -8,11 +8,12 @@ from tests.conftest import db
 from tests.test_data import dish_data, dish_keys, updated_dish_data
 
 
-async def test_create_dish(async_client: AsyncClient, create_submenu):
-
+async def test_create_dish(async_client: AsyncClient, clear_db, create_submenu):
     submenu = create_submenu
-    response = await async_client.post(f'/api/v1/menus/{submenu.menu_id}/submenus/{submenu.id}/dishes/',
-                                       data=json.dumps(dish_data))
+    menu_id = submenu.__getattribute__('menu_id')
+    submenu_id = submenu.__getattribute__('id')
+    response = await async_client.post(f'/api/v1/menus/{menu_id}/submenus/{submenu_id}/dishes/',
+                                       json=dish_data)
     resp_data = response.json()
     assert response.status_code == 201
     assert sorted(list(resp_data.keys())) == dish_keys
@@ -21,8 +22,7 @@ async def test_create_dish(async_client: AsyncClient, create_submenu):
     assert resp_data['price'] == dish_data['price']
 
 
-async def test_get_dish_list(async_client: AsyncClient, create_dish):
-
+async def test_get_dish_list(async_client: AsyncClient, clear_db, create_dish):
     menu = db.query(Menu).first()
     submenu = db.query(Submenu).filter_by(menu_id=menu.id).first()
     response = await async_client.get(f'/api/v1/menus/{menu.id}/submenus/{submenu.id}/dishes/')
@@ -32,7 +32,7 @@ async def test_get_dish_list(async_client: AsyncClient, create_dish):
     assert len(resp_data) == 1
 
 
-async def test_get_empty_dish_list(async_client: AsyncClient, create_submenu):
+async def test_get_empty_dish_list(async_client: AsyncClient, clear_db, create_submenu):
 
     submenu = create_submenu
     response = await async_client.get(f'/api/v1/menus/{submenu.menu_id}/submenus/{submenu.id}/dishes/')
@@ -41,7 +41,7 @@ async def test_get_empty_dish_list(async_client: AsyncClient, create_submenu):
     assert resp_data == []
 
 
-async def test_get_dish_by_id(async_client: AsyncClient, create_dish):
+async def test_get_dish_by_id(async_client: AsyncClient, clear_db, create_dish):
 
     dish = create_dish
     menu = db.query(Menu).first()
@@ -55,7 +55,7 @@ async def test_get_dish_by_id(async_client: AsyncClient, create_dish):
     assert resp_data['price'] == dish_data['price']
 
 
-async def test_get_dish_not_found(async_client: AsyncClient, create_submenu):
+async def test_get_dish_not_found(async_client: AsyncClient, clear_db, create_submenu):
 
     submenu = create_submenu
     dish_id = 'fake_id'
@@ -65,13 +65,13 @@ async def test_get_dish_not_found(async_client: AsyncClient, create_submenu):
     assert resp_data['detail'] == 'dish not found'
 
 
-async def test_update_dish(async_client: AsyncClient, create_dish):
+async def test_update_dish(async_client: AsyncClient, clear_db, create_dish):
 
     dish = create_dish
     menu = db.query(Menu).first()
     submenu = db.query(Submenu).filter_by(menu_id=menu.id).first()
     response = await async_client.patch(f'/api/v1/menus/{menu.id}/submenus/' f'{submenu.id}/dishes/{dish.id}',
-                                        data=json.dumps(updated_dish_data))
+                                        json=updated_dish_data)
     resp_data = response.json()
     assert response.status_code == 200
     assert sorted(list(resp_data.keys())) == dish_keys
@@ -80,18 +80,18 @@ async def test_update_dish(async_client: AsyncClient, create_dish):
     assert resp_data['price'] == updated_dish_data['price']
 
 
-async def test_patch_dish_not_found(async_client: AsyncClient, create_submenu):
+async def test_patch_dish_not_found(async_client: AsyncClient, clear_db, create_submenu):
 
     submenu = create_submenu
     dish_id = 'fake_id'
     response = await async_client.patch(f'/api/v1/menus/{submenu.menu_id}/submenus/' f'{submenu.id}/dishes/{dish_id}',
-                                        data=json.dumps(updated_dish_data))
+                                       json=updated_dish_data)
     assert response.status_code == 404
     resp_data = response.json()
     assert resp_data['detail'] == 'dish not found'
 
 
-async def test_delete_dish(async_client: AsyncClient, create_dish):
+async def test_delete_dish(async_client: AsyncClient, clear_db, create_dish):
 
     dish = create_dish
     menu = db.query(Menu).first()

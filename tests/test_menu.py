@@ -5,18 +5,17 @@ from httpx import AsyncClient
 from tests.test_data import menu_data, menu_keys, updated_menu_data
 
 
-async def test_get_empty_menu_list(async_client: AsyncClient):
-
+async def test_get_empty_menu_list(async_client: AsyncClient, clear_db):
     response = await async_client.get('/api/v1/menus/')
     assert response.status_code == 200
     resp_data = response.json()
     assert resp_data == []
 
 
-async def test_create_menu(async_client: AsyncClient):
+async def test_create_menu(async_client: AsyncClient, clear_db):
 
     response = await async_client.post('/api/v1/menus/',
-                                       data=json.dumps(menu_data))
+                                       json=menu_data)
     resp_data = response.json()
 
     assert (sorted(list(resp_data.keys())) == menu_keys)
@@ -27,7 +26,7 @@ async def test_create_menu(async_client: AsyncClient):
     assert resp_data['dishes_count'] == 0
 
 
-async def test_get_menu_list(async_client: AsyncClient, create_menu):
+async def test_get_menu_list(async_client: AsyncClient, clear_db, create_menu):
 
     response = await async_client.get('/api/v1/menus/')
     assert response.status_code == 200
@@ -36,7 +35,7 @@ async def test_get_menu_list(async_client: AsyncClient, create_menu):
     assert len(resp_data) == 1
 
 
-async def test_get_menu_by_id(async_client: AsyncClient, create_menu):
+async def test_get_menu_by_id(async_client: AsyncClient, clear_db, create_menu):
 
     menu = create_menu
     id_response = await async_client.get(f'/api/v1/menus/{menu.id}')
@@ -49,7 +48,7 @@ async def test_get_menu_by_id(async_client: AsyncClient, create_menu):
     assert id_resp_data['dishes_count'] == 0
 
 
-async def test_get_menu_not_found(async_client: AsyncClient):
+async def test_get_menu_not_found(async_client: AsyncClient, clear_db, create_menu):
 
     menu_id = 'fake_id'
     response = await async_client.get(f'/api/v1/menus/{menu_id}')
@@ -58,11 +57,11 @@ async def test_get_menu_not_found(async_client: AsyncClient):
     assert resp_data['detail'] == 'menu not found'
 
 
-async def test_update_menu(async_client: AsyncClient, create_menu):
+async def test_update_menu(async_client: AsyncClient, clear_db, create_menu):
 
     menu = create_menu
     patch_resp = await async_client.patch(f'/api/v1/menus/{menu.id}',
-                                          data=json.dumps(updated_menu_data))
+                                          json=updated_menu_data)
     patch_data = patch_resp.json()
     assert patch_resp.status_code == 200
     assert sorted(list(patch_data.keys())) == menu_keys
@@ -72,17 +71,17 @@ async def test_update_menu(async_client: AsyncClient, create_menu):
     assert patch_data['dishes_count'] == 0
 
 
-async def test_patch_menu_not_found(async_client: AsyncClient):
+async def test_patch_menu_not_found(async_client: AsyncClient, clear_db):
 
     menu_id = 'fake_id'
     response = await async_client.patch(f'/api/v1/menus/{menu_id}',
-                                        data=json.dumps(updated_menu_data))
+                                        json=updated_menu_data)
     assert response.status_code == 404
     resp_data = response.json()
     assert resp_data['detail'] == 'menu not found'
 
 
-async def test_delete_menu(async_client: AsyncClient, create_menu):
+async def test_delete_menu(async_client: AsyncClient, clear_db, create_menu):
 
     menu = create_menu
     delete_resp = await async_client.delete(f'/api/v1/menus/{menu.id}')
