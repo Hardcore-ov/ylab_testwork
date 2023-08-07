@@ -1,12 +1,16 @@
 from decimal import Decimal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 
 
 class DishBase(BaseModel):
     title: str
     description: str
     price: Decimal
+
+    @validator('price')
+    def check_price(cls, value: Decimal):
+        return format(float(value), ".2f")
 
 
 class DishCreate(DishBase):

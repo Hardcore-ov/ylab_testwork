@@ -1,111 +1,74 @@
-from fastapi.encoders import jsonable_encoder
-from sqlalchemy import select
+from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.service import BaseService
+from src.validators import validated_submenu, validated_menu
+from src.utils import clear_cache, get_cache, set_cache
+from src.database import get_async_session
+from src.submenu.models import Submenu
+from src.schemas import StatusMessage
 
-class BaseService:
-    def __init__(self, model):
-        self.model = model
 
-    async def get_one(
-        self,
-        obj_id: str,
-        session: AsyncSession,
-    ):
-        db_obj = await session.execute(
-            select(self.model).where(
-                self.model.id == obj_id,
-            ),
+class SubmenuCache:
+    def __init__(self, session, service):
+        self.session = session
+        self.service = service
+
+    async def create_submenu(self, menu_id, submenu):
+        await validated_menu.validate_id(menu_id, self.session)
+        await validated_submenu.validate_title(submenu.title, self.session)
+        submenu = await self.service.create_subobject(
+            menu_id,
+            submenu,
+            self.session,
         )
-        return db_obj.scalars().first()
+        await set_cache('submenu', submenu.id, submenu)
+        await clear_cache('menu', menu_id)
+        await clear_cache('menu', 'list')
+        return submenu
 
-    async def get_many(
-        self,
-        session: AsyncSession,
-    ):
-        db_objs = await session.execute(select(self.model))
-        return db_objs.scalars().all()
+    async def get_submenu_list(self, menu_id):
+        await validated_menu.validate_id(menu_id, self.session)
+        cached = await get_cache(menu_id, 'submenu')
+        if cached:
+            print('from cache')
+            return cached
+        submenu_list = await self.service.read_all_subobjects(menu_id, self.session)
+        await set_cache(menu_id, 'submenu', submenu_list)
+        return submenu_list
 
-    async def create(
-        self,
-        obj_in,
-        session: AsyncSession,
-    ):
-        obj_in_data = obj_in.dict()
-        db_obj = self.model(**obj_in_data)
-        session.add(db_obj)
-        await session.commit()
-        await session.refresh(db_obj)
-        return db_obj
+    async def get_submenu(self, submenu_id):
+        cached = await get_cache('submenu', submenu_id)
+        if cached:
+            print('from cache')
+            return cached
+        await validated_submenu.validate_id(submenu_id, self.session)
+        submenu = await self.service.get_one(submenu_id, self.session)
+        await set_cache('submenu', submenu_id, submenu)
+        return submenu
 
-    async def update(
-        self,
-        db_obj,
-        obj_in,
-        session: AsyncSession,
-    ):
-        obj_data = jsonable_encoder(db_obj)
-        update_data = obj_in.dict(exclude_unset=True)
+    async def update_submenu(self, submenu_id, obj_in):
+        submenu = await validated_submenu.validate_id(submenu_id, self.session)
+        submenu = await self.service.update(submenu, obj_in, self.session)
+        await set_cache('submenu', submenu_id, submenu)
+        await clear_cache(submenu.menu_id, 'submenu')
+        await clear_cache('menu', submenu.menu_id)
+        await clear_cache('menu', 'list')
+        return submenu
 
-        for field in obj_data:
-            if field in update_data:
-                setattr(db_obj, field, update_data[field])
-        session.add(db_obj)
-        await session.commit()
-        await session.refresh(db_obj)
-        return db_obj
-
-    async def delete(
-        self,
-        db_obj,
-        session: AsyncSession,
-    ):
-        await session.delete(db_obj)
-        await session.commit()
-        return db_obj
-
-    async def read_all_subobjects(
-        self,
-        obj_id: str,
-        session: AsyncSession,
-    ):
-        subobjects = await session.execute(
-            select(self.model).where(self.model.menu_id == obj_id),
+    async def delete_submenu(self, submenu_id):
+        submenu = await validated_submenu.validate_id(submenu_id, self.session)
+        await self.service.delete(submenu, self.session)
+        await clear_cache('submenu', submenu_id)
+        await clear_cache(submenu.menu_id, 'submenu')
+        await clear_cache('menu', submenu.menu_id)
+        await clear_cache('menu', 'list')
+        return StatusMessage(
+            status=True,
+            message='The submenu has been deleted',
         )
-        return subobjects.scalars().all()
 
-    async def create_subobject(
-        self,
-        obj_id: str,
-        obj_in,
-        session: AsyncSession,
-    ):
-        new_data = obj_in.dict()
-        db_subobj = self.model(**new_data, menu_id=obj_id)
-        session.add(db_subobj)
-        await session.commit()
-        await session.refresh(db_subobj)
-        return db_subobj
 
-    async def create_dish(
-        self,
-        obj_id: str,
-        obj_in,
-        session: AsyncSession,
-    ):
-        new_data = obj_in.dict()
-        db_subobj = self.model(**new_data, submenu_id=obj_id)
-        session.add(db_subobj)
-        await session.commit()
-        await session.refresh(db_subobj)
-        return db_subobj
-
-    async def read_all_dishes(
-        self,
-        obj_id: str,
-        session: AsyncSession,
-    ):
-        subobjects = await session.execute(
-            select(self.model).where(self.model.submenu_id == obj_id),
-        )
-        return subobjects.scalars().all()
+async def submenu_service(session: AsyncSession = Depends(get_async_session)):
+    service = BaseService(Submenu)
+    return SubmenuCache(session=session, service=service)

@@ -7,7 +7,7 @@ from src.database import get_async_session
 from src.dish.models import Dish
 from src.dish.schemas import DishCreate, DishOut, DishUpdate
 from src.schemas import StatusMessage
-from src.service import BaseService
+from src.dish.service import DishCache, dish_service
 from src.validators import validated_dish, validated_submenu
 
 router = APIRouter(
@@ -21,55 +21,41 @@ router = APIRouter(
              summary='Создание блюда',
              )
 async def create_new_dish(submenu_id: str, dish: DishCreate,
-                          session: AsyncSession = Depends(get_async_session)
+                          service: DishCache = Depends(dish_service)
                           ) -> DishOut:
-    service = BaseService(Dish)
-    await validated_submenu.validate_id(submenu_id, session)
-    await validated_dish.validate_title(dish.title, session)
-    return await service.create_dish(submenu_id, dish, session)
+    return await service.create_dish(submenu_id, dish)
 
 
 @router.get('/{dish_id}', response_model=DishOut,
             status_code=HTTPStatus.OK,
             summary='Просмотр блюда по ID')
-async def get_one_dish(dish_id: str, session: AsyncSession = Depends(get_async_session)
+async def get_one_dish(dish_id: str, service: DishCache = Depends(dish_service)
                        ) -> DishOut:
-    service = BaseService(Dish)
-    await validated_dish.validate_id(dish_id, session)
-    return await service.get_one(dish_id, session)
+    return await service.get_dish(dish_id)
 
 
 @router.get('/', response_model=list[DishOut],
             status_code=HTTPStatus.OK,
-            summary='Просмотр всего списка блюд')
-async def get_all_dishes(session: AsyncSession = Depends(get_async_session)
+            summary='Просмотр всего списка блюд по ID подменю')
+async def get_all_dishes(submenu_id: str,
+                         service: DishCache = Depends(dish_service)
                          ) -> list[DishOut]:
-    service = BaseService(Dish)
-    return await service.get_many(session)
+    return await service.get_dish_list(submenu_id)
 
 
 @router.patch('/{dish_id}', response_model=DishOut,
               status_code=HTTPStatus.OK,
               summary='Обновление блюда')
 async def update_dish(dish_id: str, dish_in: DishUpdate,
-                      session: AsyncSession = Depends(get_async_session)
+                      service: DishCache = Depends(dish_service)
                       ) -> DishOut:
-    service = BaseService(Dish)
-    dish = await validated_dish.validate_id(dish_id, session)
-    return await service.update(dish, dish_in, session)
+    return await service.update_dish(dish_id, dish_in)
 
 
 @router.delete('/{dish_id}', response_model=StatusMessage,
                status_code=HTTPStatus.OK,
                summary='Удаление блюда по ID')
 async def delete_dish(dish_id: str,
-                      session: AsyncSession = Depends(get_async_session)
+                      service: DishCache = Depends(dish_service)
                       ) -> StatusMessage:
-    service = BaseService(Dish)
-    dish = await validated_dish.validate_id(dish_id, session)
-    dish_name = dish.__tablename__
-    await service.delete(dish, session)
-    return StatusMessage(
-        status=True,
-        message=f'The {dish_name} has been deleted',
-    )
+    return await service.delete_dish(dish_id)

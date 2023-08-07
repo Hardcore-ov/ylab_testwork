@@ -1,14 +1,10 @@
 from http import HTTPStatus
-
 from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.database import get_async_session
-from src.menu.models import Menu
 from src.menu.schemas import MenuCreate, MenuOut, MenuUpdate
+from src.menu.service import MenuCache, menu_service
 from src.schemas import StatusMessage
-from src.service import BaseService
-from src.validators import validated_menu
+
 
 router = APIRouter(
     prefix='/menus',
@@ -20,53 +16,41 @@ router = APIRouter(
              status_code=HTTPStatus.CREATED,
              summary='Создание меню')
 async def create_new_menu(menu: MenuCreate,
-                          session: AsyncSession = Depends(get_async_session)
+                          service: MenuCache = Depends(menu_service)
                           ) -> MenuOut:
-    service = BaseService(Menu)
-    await validated_menu.validate_title(menu.title, session)
-    return await service.create(menu, session)
+    return await service.create_menu(menu)
 
 
 @router.get('/{menu_id}', response_model=MenuOut,
             status_code=HTTPStatus.OK,
             summary='Просмотр меню по ID')
 async def get_one_menu(menu_id: str,
-                       session: AsyncSession = Depends(get_async_session)
+                       service: MenuCache = Depends(menu_service)
                        ) -> MenuOut:
-    return await validated_menu.validate_id(menu_id, session)
+    return await service.get_menu(menu_id)
 
 
 @router.get('/', response_model=list[MenuOut],
             status_code=HTTPStatus.OK,
             summary='Просмотр всего списка меню')
-async def get_all_menus(session: AsyncSession = Depends(get_async_session)
+async def get_all_menus(service: MenuCache = Depends(menu_service)
                         ) -> list[MenuOut]:
-    service = BaseService(Menu)
-    return await service.get_many(session)
+    return await service.get_menu_list()
 
 
 @router.patch('/{menu_id}', response_model=MenuOut,
               status_code=HTTPStatus.OK,
               summary='Обновление меню')
 async def update_menu(menu_id: str, menu_in: MenuUpdate,
-                      session: AsyncSession = Depends(get_async_session)
+                      service: MenuCache = Depends(menu_service)
                       ) -> MenuOut:
-    service = BaseService(Menu)
-    menu = await validated_menu.validate_id(menu_id, session)
-    return await service.update(menu, menu_in, session)
+    return await service.update_menu(menu_id, menu_in)
 
 
 @router.delete('/{menu_id}', response_model=StatusMessage,
                status_code=HTTPStatus.OK,
                summary='Удаление меню по ID')
 async def delete_menu(menu_id: str,
-                      session: AsyncSession = Depends(get_async_session)
+                      service: MenuCache = Depends(menu_service)
                       ) -> StatusMessage:
-    service = BaseService(Menu)
-    menu = await validated_menu.validate_id(menu_id, session)
-    menu_name = menu.__tablename__
-    await service.delete(menu, session)
-    return StatusMessage(
-        status=True,
-        message=f'The {menu_name} has been deleted',
-    )
+    return await service.delete_menu(menu_id)
