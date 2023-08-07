@@ -38,6 +38,19 @@ services:
     depends_on:
       - db
 
+  redis:
+    image: redis:latest
+    expose:
+      - 6379
+    ports:
+      - "6379:6379"
+    networks:
+      - web_network
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 20s
+      retries: 20
 
 networks:
   web_network:

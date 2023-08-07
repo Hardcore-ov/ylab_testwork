@@ -10,7 +10,6 @@ class TestMenu:
         resp_data = response.json()
         assert resp_data == []
 
-
     async def test_create_menu(self, async_client: AsyncClient):
 
         response = await async_client.post('/api/v1/menus/',
@@ -24,7 +23,6 @@ class TestMenu:
         assert resp_data['submenus_count'] == 0
         assert resp_data['dishes_count'] == 0
 
-
     async def test_get_menu_list(self, async_client: AsyncClient, create_menu):
 
         response = await async_client.get('/api/v1/menus/')
@@ -32,7 +30,6 @@ class TestMenu:
         resp_data = response.json()
         assert isinstance(resp_data, list)
         assert len(resp_data) == 1
-
 
     async def test_get_menu_by_id(self, async_client: AsyncClient, create_menu):
 
@@ -46,7 +43,6 @@ class TestMenu:
         assert id_resp_data['submenus_count'] == 0
         assert id_resp_data['dishes_count'] == 0
 
-
     async def test_get_menu_not_found(self, async_client: AsyncClient, create_menu):
 
         menu_id = 'fake_id'
@@ -54,7 +50,6 @@ class TestMenu:
         assert response.status_code == 404
         resp_data = response.json()
         assert resp_data['detail'] == 'menu not found'
-
 
     async def test_update_menu(self, async_client: AsyncClient, create_menu):
 
@@ -69,7 +64,6 @@ class TestMenu:
         assert patch_data['submenus_count'] == 0
         assert patch_data['dishes_count'] == 0
 
-
     async def test_patch_menu_not_found(self, async_client: AsyncClient):
 
         menu_id = 'fake_id'
@@ -78,7 +72,6 @@ class TestMenu:
         assert response.status_code == 404
         resp_data = response.json()
         assert resp_data['detail'] == 'menu not found'
-
 
     async def test_delete_menu(self, async_client: AsyncClient, create_menu):
 

@@ -1,6 +1,11 @@
 from httpx import AsyncClient
 
-from tests.test_data import submenu_data, submenu_keys, updated_menu_data, updated_submenu_data
+from tests.test_data import (
+    submenu_data,
+    submenu_keys,
+    updated_menu_data,
+    updated_submenu_data,
+)
 
 
 class TestSubmenu:

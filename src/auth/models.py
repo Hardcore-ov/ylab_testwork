@@ -1,11 +1,11 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, String, UUID, JSON, TIMESTAMP, ForeignKey, Boolean
+from sqlalchemy import JSON, TIMESTAMP, UUID, Boolean, Column, ForeignKey, String
 from sqlalchemy.orm import relationship
 
-Base = declarative_base()
+from src.database import Base
+
 
 class Role(Base):
     __tablename__ = 'role'
@@ -14,6 +14,7 @@ class Role(Base):
     name = Column(String)
     permissions = Column(JSON)
     users = relationship('User', back_populates='role')
+
 
 class User(Base):
     __tablename__ = 'user'
@@ -28,4 +29,3 @@ class User(Base):
     is_superuser = Column(Boolean, default=False, nullable=False)
     is_verified = Column(Boolean, default=False, nullable=False)
     role = relationship('Role', back_populates='users')
-

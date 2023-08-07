@@ -13,11 +13,8 @@ class Validation:
     def __init__(self, model):
         self.model = model
 
-    async def validate_id(
-        self,
-        validation_id: str,
-        session: AsyncSession,
-    ):
+    async def validate_id(self, validation_id: str,
+                          session: AsyncSession):
         model_name = self.model.__tablename__
         query = select(self.model).where(self.model.id == validation_id)
         validation_object = await session.execute(query)
@@ -25,26 +22,23 @@ class Validation:
         if validation_object is None:
             raise HTTPException(
                 status_code=HTTPStatus.NOT_FOUND,
-                detail=f"{model_name} not found",
+                detail=f'{model_name} not found',
             )
         return validation_object
 
-    async def validate_title(
-        self,
-        validation_title: str,
-        session: AsyncSession,
-    ):
+    async def validate_title(self, validation_title: str,
+                             session: AsyncSession) -> None:
         model_name = self.model.__tablename__
-        validation_title = await session.execute(
+        validation_obj = await session.execute(
             select(self.model.id).where(
                 self.model.title == validation_title,
             ),
         )
-        validation_title = validation_title.scalars().first()
+        validation_title = validation_obj.scalars().first()
         if validation_title is not None:
             raise HTTPException(
                 status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
-                detail=f"{model_name} с таким именем уже существует!",
+                detail=f'{model_name} с таким именем уже существует!',
             )
         return validation_title
 

@@ -8,4 +8,3 @@ class BaseModel(Base):
 
     title = Column(String, unique=True)
     description = Column(String)
-

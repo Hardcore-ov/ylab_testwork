@@ -20,7 +20,6 @@ class TestDish:
         assert resp_data['description'] == dish_data['description']
         assert resp_data['price'] == dish_data['price']
 
-
     async def test_get_dish_list(self, async_client: AsyncClient, create_dish):
         menu = db.query(Menu).first()
         submenu = db.query(Submenu).filter_by(menu_id=menu.id).first()
@@ -30,7 +29,6 @@ class TestDish:
         assert isinstance(resp_data, list)
         assert len(resp_data) == 1
 
-
     async def test_get_empty_dish_list(self, async_client: AsyncClient, create_submenu):
 
         submenu = create_submenu
@@ -38,7 +36,6 @@ class TestDish:
         assert response.status_code == 200
         resp_data = response.json()
         assert resp_data == []
-
 
     async def test_get_dish_by_id(self, async_client: AsyncClient, create_dish):
 
@@ -53,7 +50,6 @@ class TestDish:
         assert resp_data['description'] == dish_data['description']
         assert resp_data['price'] == dish_data['price']
 
-
     async def test_get_dish_not_found(self, async_client: AsyncClient, create_submenu):
 
         submenu = create_submenu
@@ -62,7 +58,6 @@ class TestDish:
         assert subresp.status_code == 404
         resp_data = subresp.json()
         assert resp_data['detail'] == 'dish not found'
-
 
     async def test_update_dish(self, async_client: AsyncClient, create_dish):
 
@@ -78,17 +73,15 @@ class TestDish:
         assert resp_data['description'] == updated_dish_data['description']
         assert resp_data['price'] == updated_dish_data['price']
 
-
     async def test_patch_dish_not_found(self, async_client: AsyncClient, create_submenu):
 
         submenu = create_submenu
         dish_id = 'fake_id'
         response = await async_client.patch(f'/api/v1/menus/{submenu.menu_id}/submenus/' f'{submenu.id}/dishes/{dish_id}',
-                                           json=updated_dish_data)
+                                            json=updated_dish_data)
         assert response.status_code == 404
         resp_data = response.json()
         assert resp_data['detail'] == 'dish not found'
-
 
     async def test_delete_dish(self, async_client: AsyncClient, create_dish):
 
