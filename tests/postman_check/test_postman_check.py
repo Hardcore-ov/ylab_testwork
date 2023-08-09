@@ -14,8 +14,9 @@ from tests.test_data import (
 
 class TestPostman:
 
+    @pytest.mark.dependency()
     async def test_create_menu(self, async_client: AsyncClient):
-
+        print('start tests')
         response = await async_client.post('/api/v1/menus/',
                                            json=menu_data)
         resp_data = response.json()
@@ -27,6 +28,7 @@ class TestPostman:
         assert resp_data['submenus_count'] == 0
         assert resp_data['dishes_count'] == 0
 
+    @pytest.mark.dependency(depends=['test_create_menu'])
     async def test_create_submenu(self, async_client: AsyncClient):
         menu_id = await async_client.get('/api/v1/menus/')
         menu_id = menu_id.json()[0]['id']
@@ -42,6 +44,7 @@ class TestPostman:
         assert resp_data['dishes_count'] == 0
         pytest.shared = [menu_id, submenu_id]
 
+    @pytest.mark.dependency(depends=['test_create_submenu'])
     async def test_create_dishes(self, async_client: AsyncClient):
 
         response = await async_client.post(f'/api/v1/menus/{pytest.shared[0]}/submenus/{pytest.shared[1]}/dishes/',
@@ -62,6 +65,7 @@ class TestPostman:
         assert resp_data['description'] == dish_data_second['description']
         assert resp_data['price'] == dish_data_second['price']
 
+    @pytest.mark.dependency(depends=['test_create_dishes'])
     async def test_get_menu(self, async_client: AsyncClient):
 
         response = await async_client.get(f'/api/v1/menus/{pytest.shared[0]}')
@@ -74,6 +78,7 @@ class TestPostman:
         assert resp_data['submenus_count'] == 1
         assert resp_data['dishes_count'] == 2
 
+    @pytest.mark.dependency(depends=['test_get_menu'])
     async def test_get_submenu_by_id(self, async_client: AsyncClient):
 
         response = await async_client.get(f'/api/v1/menus/{pytest.shared[0]}/submenus/{pytest.shared[1]}')
@@ -85,6 +90,7 @@ class TestPostman:
         assert resp_data['title'] == submenu_data['title']
         assert resp_data['dishes_count'] == 2
 
+    @pytest.mark.dependency(depends=['test_get_submenu_by_id'])
     async def test_delete_submenu(self, async_client: AsyncClient):
 
         response = await async_client.delete(f'/api/v1/menus/{pytest.shared[0]}/submenus/{pytest.shared[1]}')
@@ -93,6 +99,7 @@ class TestPostman:
         assert resp_data['status'] is True
         assert resp_data['message'] == 'The submenu has been deleted'
 
+    @pytest.mark.dependency(depends=['test_delete_submenu'])
     async def test_get_submenu_list(self, async_client: AsyncClient):
 
         response = await async_client.get(f'/api/v1/menus/{pytest.shared[0]}/submenus/')
@@ -100,6 +107,7 @@ class TestPostman:
         resp_data = response.json()
         assert resp_data == []
 
+    @pytest.mark.dependency(depends=['test_get_submenu_list'])
     async def test_get_dish_list(self, async_client: AsyncClient):
 
         response = await async_client.get(f'/api/v1/menus/{pytest.shared[0]}/submenus/{pytest.shared[1]}/dishes/')
@@ -108,6 +116,7 @@ class TestPostman:
         resp_data = response.json()
         assert resp_data == []
 
+    @pytest.mark.dependency(depends=['test_get_dish_list'])
     async def test_get_menu_by_id(self, async_client: AsyncClient):
 
         response = await async_client.get(f'/api/v1/menus/{pytest.shared[0]}')
@@ -120,6 +129,7 @@ class TestPostman:
         assert resp_data['submenus_count'] == 0
         assert resp_data['dishes_count'] == 0
 
+    @pytest.mark.dependency(depends=['test_get_menu_by_id'])
     async def test_delete_menu(self, async_client: AsyncClient):
 
         response = await async_client.delete(f'/api/v1/menus/{pytest.shared[0]}')
@@ -128,6 +138,7 @@ class TestPostman:
         assert resp_data['status'] is True
         assert resp_data['message'] == 'The menu has been deleted'
 
+    @pytest.mark.dependency(depends=['test_delete_menu'])
     async def test_get_menu_list(self, async_client: AsyncClient, clear_db):
 
         response = await async_client.get('/api/v1/menus/')

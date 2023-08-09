@@ -10,7 +10,7 @@ class DishBase(BaseModel):
 
     @validator('price')
     def check_price(cls, value: Decimal):
-        return format(float(value), ".2f")
+        return format(float(value), '.2f')
 
 
 class DishCreate(DishBase):
