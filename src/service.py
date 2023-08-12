@@ -2,7 +2,7 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.models import BaseModel
+from src.menu.schemas import MenuBase
 
 
 class BaseService:
@@ -18,17 +18,17 @@ class BaseService:
         db_objs = await session.execute(select(self.model))
         return db_objs.scalars().all()
 
-    async def create(self, obj_in: BaseModel, session: AsyncSession):
-        obj_in_data = obj_in.dict()
+    async def create(self, obj_in: MenuBase, session: AsyncSession):
+        obj_in_data = obj_in.model_dump()
         db_obj = self.model(**obj_in_data)
         session.add(db_obj)
         await session.commit()
         await session.refresh(db_obj)
         return db_obj
 
-    async def update(self, db_obj: BaseModel, obj_in: BaseModel, session: AsyncSession):
+    async def update(self, db_obj: MenuBase, obj_in: MenuBase, session: AsyncSession):
         obj_data = jsonable_encoder(db_obj)
-        update_data = obj_in.dict(exclude_unset=True)
+        update_data = obj_in.model_dump(exclude_unset=True)
 
         for field in obj_data:
             if field in update_data:
@@ -38,7 +38,7 @@ class BaseService:
         await session.refresh(db_obj)
         return db_obj
 
-    async def delete(self, db_obj: BaseModel, session: AsyncSession):
+    async def delete(self, db_obj: MenuBase, session: AsyncSession):
         await session.delete(db_obj)
         await session.commit()
         return db_obj
@@ -48,16 +48,16 @@ class BaseService:
             select(self.model).where(self.model.menu_id == obj_id))
         return subobjects.scalars().all()
 
-    async def create_subobject(self, obj_id: str, obj_in: BaseModel, session: AsyncSession):
-        new_data = obj_in.dict()
+    async def create_subobject(self, obj_id: str, obj_in: MenuBase, session: AsyncSession):
+        new_data = obj_in.model_dump()
         db_subobj = self.model(**new_data, menu_id=obj_id)
         session.add(db_subobj)
         await session.commit()
         await session.refresh(db_subobj)
         return db_subobj
 
-    async def create_dish(self, obj_id: str, obj_in: BaseModel, session: AsyncSession):
-        new_data = obj_in.dict()
+    async def create_dish(self, obj_id: str, obj_in: MenuBase, session: AsyncSession):
+        new_data = obj_in.model_dump()
         db_subobj = self.model(**new_data, submenu_id=obj_id)
         session.add(db_subobj)
         await session.commit()
