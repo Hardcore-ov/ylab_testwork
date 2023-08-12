@@ -41,6 +41,9 @@ class MenuService:
         await set_cache('menu', 'list', menu_list)
         return menu_list
 
+    async def get_all_menu(self):
+        return await self.service.read_all_menu(self.session)
+
     async def update_menu(self, menu_id: str, obj_in: MenuUpdate):
         menu = await self.check_menu.check_id(menu_id, self.session)
         menu = await self.service.update(menu, obj_in, self.session)

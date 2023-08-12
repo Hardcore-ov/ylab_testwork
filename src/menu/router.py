@@ -2,7 +2,7 @@ from http import HTTPStatus
 
 from fastapi import APIRouter, Depends
 
-from src.menu.schemas import MenuCreate, MenuOut, MenuUpdate
+from src.menu.schemas import MenuCreate, MenuOut, MenuUpdate, MenuAll
 from src.menu.service import MenuService, menu_service
 from src.schemas import StatusMessage
 
@@ -54,3 +54,10 @@ async def delete_menu(menu_id: str,
                       service: MenuService = Depends(menu_service)
                       ) -> StatusMessage:
     return await service.delete_menu(menu_id)
+
+
+@router.get('/all/', response_model=list[MenuAll],
+            status_code=HTTPStatus.OK,
+            summary='Просмотр всего дерева меню, подменю, блюд')
+async def get_all_menus(service: MenuService = Depends(menu_service)) -> list[MenuAll]:
+    return await service.get_all_menu()

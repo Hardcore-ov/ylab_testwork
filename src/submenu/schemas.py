@@ -1,3 +1,4 @@
+from src.dish.schemas import DishOut
 from src.schemas import SchemaBase
 
 
@@ -24,6 +25,14 @@ class SubmenuUpdate(SchemaBase):
 class SubmenuOut(SchemaBase):
     id: str
     dishes_count: int
+
+    class Config:
+        from_attributes = True
+
+
+class SubmenuAll(SchemaBase):
+    id: str
+    dishes: list[DishOut] | None = None
 
     class Config:
         from_attributes = True

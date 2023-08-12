@@ -1,4 +1,5 @@
 from src.schemas import SchemaBase
+from src.submenu.schemas import SubmenuAll
 
 
 class MenuCreate(SchemaBase):
@@ -25,6 +26,14 @@ class MenuOut(SchemaBase):
     id: str
     submenus_count: int
     dishes_count: int
+
+    class Config:
+        from_attributes = True
+
+
+class MenuAll(SchemaBase):
+    id: str
+    submenus: list[SubmenuAll] | None = None
 
     class Config:
         from_attributes = True

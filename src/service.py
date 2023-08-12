@@ -1,8 +1,10 @@
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 
 from src.schemas import SchemaBase
+from src.submenu.models import Submenu
 
 
 class BaseService:
@@ -68,3 +70,13 @@ class BaseService:
         subobjects = await session.execute(
             select(self.model).where(self.model.submenu_id == obj_id))
         return subobjects.scalars().all()
+
+    async def read_all_menu(self, session):
+        result = await session.scalars(
+            select(self.model).options(
+                joinedload(self.model.submenus).joinedload(Submenu.dishes)
+            )
+        )
+        menus = result.unique().all()
+        menu_data = jsonable_encoder(menus)
+        return menu_data
