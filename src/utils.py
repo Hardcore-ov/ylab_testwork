@@ -1,8 +1,10 @@
 import json
 import uuid
-
 from fastapi.encoders import jsonable_encoder
-
+from fastapi import HTTPException
+from http import HTTPStatus
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from src.database import redis
 
 
@@ -31,3 +33,32 @@ async def clear_cache(prefix, body):
     keys = await redis.keys(f'{key}*')
     if keys:
         await redis.delete(*keys)
+
+
+class CheckIdTitleExist:
+    def __init__(self, model):
+        self.model = model
+
+    async def check_id(self, check_id: str, session: AsyncSession):
+        model_name = self.model.__tablename__
+        query = select(self.model).where(self.model.id == check_id)
+        check_object = await session.execute(query)
+        check_object = check_object.scalars().first()
+        if check_object is None:
+            raise HTTPException(
+                status_code=HTTPStatus.NOT_FOUND,
+                detail=f'{model_name} not found')
+        return check_object
+
+    async def check_title(self, check_title: str, session: AsyncSession) -> None:
+        model_name = self.model.__tablename__
+        check_obj = await session.execute(
+            select(self.model.id).where(
+                self.model.title == check_title))
+        check_title = check_obj.scalars().first()
+        if check_title is not None:
+            raise HTTPException(
+                status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+                detail=f'{model_name} с таким именем уже существует!',
+            )
+        return check_title
