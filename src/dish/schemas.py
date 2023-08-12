@@ -1,11 +1,12 @@
 from decimal import Decimal
 
-from pydantic import BaseModel, validator
+from pydantic import validator
+
+from src.schemas import SchemaBase
 
 
-class DishBase(BaseModel):
-    title: str
-    description: str
+class DishBase(SchemaBase):
+
     price: Decimal
 
     @validator('price')
@@ -24,7 +25,7 @@ class DishCreate(DishBase):
         }
 
 
-class DishUpdate(DishCreate):
+class DishUpdate(DishBase):
     class Config:
         json_schema_extra = {
             'example': {

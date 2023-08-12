@@ -1,12 +1,7 @@
-from pydantic import BaseModel
+from src.schemas import SchemaBase
 
 
-class MenuBase(BaseModel):
-    title: str
-    description: str
-
-
-class MenuCreate(MenuBase):
+class MenuCreate(SchemaBase):
     class Config:
         json_schema_extra = {
             'example': {
@@ -16,7 +11,7 @@ class MenuCreate(MenuBase):
         }
 
 
-class MenuUpdate(MenuBase):
+class MenuUpdate(SchemaBase):
     class Config:
         json_schema_extra = {
             'example': {
@@ -26,7 +21,7 @@ class MenuUpdate(MenuBase):
         }
 
 
-class MenuOut(MenuBase):
+class MenuOut(SchemaBase):
     id: str
     submenus_count: int
     dishes_count: int
