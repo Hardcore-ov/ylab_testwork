@@ -1,5 +1,5 @@
 aiofiles
-aioredis
+aioredis~=2.0.1
 aiosqlite
 alembic==1.11.1
 annotated-types==0.5.0
@@ -37,7 +37,7 @@ pydantic-extra-types==2.0.0
 pydantic-settings==2.0.2
 pydantic_core==2.3.0
 PyJWT==2.7.0
-pytest
+pytest~=7.4.0
 pytest-asyncio
 pytest-dependency
 python-dotenv==1.0.0
@@ -51,3 +51,5 @@ ujson==5.8.0
 uvicorn==0.23.1
 watchfiles==0.19.0
 websockets==11.0.3
+
+openpyxl~=3.1.2
