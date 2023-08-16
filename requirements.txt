@@ -56,7 +56,6 @@ platformdirs==3.10.0
 pluggy==1.2.0
 pre-commit==3.3.3
 prompt-toolkit==3.0.39
-psycopg2==2.9.6
 psycopg2-binary==2.9.6
 pycparser==2.21
 pydantic==2.0.3
