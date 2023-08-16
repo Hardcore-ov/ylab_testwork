@@ -97,6 +97,10 @@ docker-compose -f docker-compose-tests.yml up
 
 [Реализация подменю](src/submenu/models.py)
 
+** Реализовать тестовый сценарий «Проверка кол-ва блюд и подменю в меню» из Postman с помощью pytest:
+
+[Тесты Postman](tests/test_postman_check.py)
+
 ДЗ 3:
 
 \* Описать ручки API в соответствий c OpenAPI [Документация тут](#headers)
