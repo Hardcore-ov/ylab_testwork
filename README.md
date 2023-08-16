@@ -63,7 +63,7 @@ docker-compose -f docker-compose-tests.yml up
 После загрузки данных из excel-файла все изменения в файле **Menu.xlsx** в папке **admin**
 будут автоматически внесены в базу данных с помощью фоновой задачи Celery.
 
-Cgt
+## Эндпоинты:
 
 ### Menus
 - **POST**   ```/api/v1/menus```создание меню
