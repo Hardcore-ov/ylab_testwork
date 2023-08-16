@@ -33,6 +33,16 @@ async def init_db():
     async with async_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     yield
+    async with async_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+
+
+@pytest.fixture
+async def clear_db():
+    async with async_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+    async with async_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
 
 
 @pytest.fixture(scope='session')
@@ -42,11 +52,11 @@ def event_loop(request) -> Generator:
     loop.close()
 
 
-@pytest_asyncio.fixture(scope='session', autouse=False)
+@pytest_asyncio.fixture
 async def async_client() -> AsyncClient:
     async with AsyncClient(app=app, base_url='http://test') as client:
         yield client
-    await client.aclose()
+
 
 engine = create_engine(TEST_DATABASE_URL)
 Session = sessionmaker(bind=engine)

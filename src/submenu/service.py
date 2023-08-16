@@ -24,9 +24,9 @@ class SubmenuService:
         await self.check_menu.check_id(menu_id, self.session)
         await self.check_submenu.check_title(submenu.title, self.session)
         submenu = await self.service.create_subobject(menu_id, submenu, self.session, id=submenu_id)
-        self.background_tasks.add_task(self.cache.set_cache('submenu', submenu.id, submenu))
-        self.background_tasks.add_task(self.cache.clear_cache('menu', menu_id))
-        self.background_tasks.add_task(self.cache.clear_cache('menu', 'list'))
+        self.background_tasks.add_task(await self.cache.set_cache('submenu', submenu.id, submenu))
+        self.background_tasks.add_task(await self.cache.clear_cache('menu', menu_id))
+        self.background_tasks.add_task(await self.cache.clear_cache('menu', 'list'))
         return submenu
 
     async def get_submenu_list(self, menu_id: str):
@@ -36,7 +36,7 @@ class SubmenuService:
             print('from cache')
             return cached
         submenu_list = await self.service.read_all_subobjects(menu_id, self.session)
-        self.background_tasks.add_task(self.cache.set_cache(menu_id, 'submenu', submenu_list))
+        self.background_tasks.add_task(await self.cache.set_cache(menu_id, 'submenu', submenu_list))
         return submenu_list
 
     async def get_submenu(self, submenu_id: str):
@@ -46,25 +46,25 @@ class SubmenuService:
             return cached
         await self.check_submenu.check_id(submenu_id, self.session)
         submenu = await self.service.get_one(submenu_id, self.session)
-        self.background_tasks.add_task(self.cache.set_cache('submenu', submenu_id, submenu))
+        self.background_tasks.add_task(await self.cache.set_cache('submenu', submenu_id, submenu))
         return submenu
 
     async def update_submenu(self, submenu_id: str, obj_in: SubmenuUpdate):
         submenu = await self.check_submenu.check_id(submenu_id, self.session)
         submenu = await self.service.update(submenu, obj_in, self.session)
-        self.background_tasks.add_task(self.cache.set_cache('submenu', submenu_id, submenu))
-        self.background_tasks.add_task(self.cache.clear_cache(submenu.menu_id, 'submenu'))
-        self.background_tasks.add_task(self.cache.clear_cache('menu', submenu.menu_id))
-        self.background_tasks.add_task(self.cache.clear_cache('menu', 'list'))
+        self.background_tasks.add_task(await self.cache.set_cache('submenu', submenu_id, submenu))
+        self.background_tasks.add_task(await self.cache.clear_cache(submenu.menu_id, 'submenu'))
+        self.background_tasks.add_task(await self.cache.clear_cache('menu', submenu.menu_id))
+        self.background_tasks.add_task(await self.cache.clear_cache('menu', 'list'))
         return submenu
 
     async def delete_submenu(self, submenu_id: str):
         submenu = await self.check_submenu.check_id(submenu_id, self.session)
         await self.service.delete(submenu, self.session)
-        self.background_tasks.add_task(self.cache.clear_cache('submenu', submenu_id))
-        self.background_tasks.add_task(self.cache.clear_cache(submenu.menu_id, 'submenu'))
-        self.background_tasks.add_task(self.cache.clear_cache('menu', submenu.menu_id))
-        self.background_tasks.add_task(self.cache.clear_cache('menu', 'list'))
+        self.background_tasks.add_task(await self.cache.clear_cache('submenu', submenu_id))
+        self.background_tasks.add_task(await self.cache.clear_cache(submenu.menu_id, 'submenu'))
+        self.background_tasks.add_task(await self.cache.clear_cache('menu', submenu.menu_id))
+        self.background_tasks.add_task(await self.cache.clear_cache('menu', 'list'))
         return StatusMessage(
             status=True,
             message='The submenu has been deleted',

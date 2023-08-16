@@ -24,10 +24,10 @@ class DishService:
         await self.check_submenu.check_id(submenu_id, self.session)
         await self.check_dish.check_title(dish.title, self.session)
         dish = await self.service.create_dish(submenu_id, dish, self.session, id=dish_id)
-        self.background_tasks.add_task(self.cache.set_cache('dish', dish.id, dish))
-        self.background_tasks.add_task(self.cache.clear_cache(submenu_id, 'dish'))
-        self.background_tasks.add_task(self.cache.clear_cache('submenu', submenu_id))
-        self.background_tasks.add_task(self.cache.clear_cache('menu', 'list'))
+        self.background_tasks.add_task(await self.cache.set_cache('dish', dish.id, dish))
+        self.background_tasks.add_task(await self.cache.clear_cache(submenu_id, 'dish'))
+        self.background_tasks.add_task(await self.cache.clear_cache('submenu', submenu_id))
+        self.background_tasks.add_task(await self.cache.clear_cache('menu', 'list'))
         return dish
 
     async def get_dish_list(self, submenu_id: str):
@@ -36,7 +36,7 @@ class DishService:
             print('from cache')
             return cached
         dish_list = await self.service.read_all_dishes(submenu_id, self.session)
-        self.background_tasks.add_task(self.cache.set_cache(submenu_id, 'dish', dish_list))
+        self.background_tasks.add_task(await self.cache.set_cache(submenu_id, 'dish', dish_list))
         return dish_list
 
     async def get_dish(self, dish_id: str):
@@ -46,24 +46,24 @@ class DishService:
             return cached
         await self.check_dish.check_id(dish_id, self.session)
         dish = await self.service.get_one(dish_id, self.session)
-        self.background_tasks.add_task(self.cache.set_cache('dish', dish_id, dish))
+        self.background_tasks.add_task(await self.cache.set_cache('dish', dish_id, dish))
         return dish
 
     async def update_dish(self, dish_id: str, obj_in: DishUpdate):
         dish = await self.check_dish.check_id(dish_id, self.session)
         dish = await self.service.update(dish, obj_in, self.session)
-        self.background_tasks.add_task(self.cache.set_cache('dish', dish_id, dish))
-        self.background_tasks.add_task(self.cache.clear_cache(dish.submenu_id, 'dish'))
-        self.background_tasks.add_task(self.cache.clear_cache('submenu', dish.submenu_id))
-        self.background_tasks.add_task(self.cache.clear_cache('menu', 'list'))
+        self.background_tasks.add_task(await self.cache.set_cache('dish', dish_id, dish))
+        self.background_tasks.add_task(await self.cache.clear_cache(dish.submenu_id, 'dish'))
+        self.background_tasks.add_task(await self.cache.clear_cache('submenu', dish.submenu_id))
+        self.background_tasks.add_task(await self.cache.clear_cache('menu', 'list'))
         return dish
 
     async def delete_dish(self, dish_id: str):
         dish = await self.check_dish.check_id(dish_id, self.session)
         await self.service.delete(dish, self.session)
-        self.background_tasks.add_task(self.cache.clear_cache('dish', dish_id))
-        self.background_tasks.add_task(self.cache.clear_cache(dish.submenu_id, 'dish'))
-        self.background_tasks.add_task(self.cache.clear_cache('menu', 'list'))
+        self.background_tasks.add_task(await self.cache.clear_cache('dish', dish_id))
+        self.background_tasks.add_task(await self.cache.clear_cache(dish.submenu_id, 'dish'))
+        self.background_tasks.add_task(await self.cache.clear_cache('menu', 'list'))
         return StatusMessage(
             status=True,
             message='The dish has been deleted',

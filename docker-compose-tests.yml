@@ -8,11 +8,11 @@ services:
       dockerfile: Dockerfile
     entrypoint: >
       sh -c "
-        pytest tests/all_menus_tests -v"
+        pytest -vv"
     networks:
       - test_network
     ports:
-      - "8001:8000"
+      - "8000:8000"
     depends_on:
       redis:
         condition: service_healthy

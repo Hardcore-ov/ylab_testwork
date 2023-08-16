@@ -22,7 +22,7 @@ class MenuService:
     async def create_menu(self, menu: MenuCreate, menu_id: str | None = None):
         await self.check_menu.check_title(menu.title, self.session)
         menu = await self.service.create(menu, self.session, id=menu_id)
-        self.background_tasks.add_task(self.cache.set_cache('menu', menu.id, menu))
+        self.background_tasks.add_task(await self.cache.set_cache('menu', menu.id, menu))
         return menu
 
     async def get_menu(self, menu_id: str):
@@ -32,7 +32,7 @@ class MenuService:
             return cached
         await self.check_menu.check_id(menu_id, self.session)
         menu = await self.service.get_one(menu_id, self.session)
-        self.background_tasks.add_task(self.cache.set_cache('menu', menu_id, menu))
+        self.background_tasks.add_task(await self.cache.set_cache('menu', menu_id, menu))
         return menu
 
     async def get_menu_list(self):
@@ -41,7 +41,7 @@ class MenuService:
             print('from cache')
             return cached
         menu_list = await self.service.get_many(self.session)
-        self.background_tasks.add_task(self.cache.set_cache('menu', 'list', menu_list))
+        self.background_tasks.add_task(await self.cache.set_cache('menu', 'list', menu_list))
         return menu_list
 
     async def get_all_menu(self):
@@ -50,15 +50,15 @@ class MenuService:
     async def update_menu(self, menu_id: str, obj_in: MenuUpdate):
         menu = await self.check_menu.check_id(menu_id, self.session)
         menu = await self.service.update(menu, obj_in, self.session)
-        self.background_tasks.add_task(self.cache.set_cache('menu', menu.id, menu))
-        self.background_tasks.add_task(self.cache.clear_cache('menu', 'list'))
+        self.background_tasks.add_task(await self.cache.set_cache('menu', menu.id, menu))
+        self.background_tasks.add_task(await self.cache.clear_cache('menu', 'list'))
         return menu
 
     async def delete_menu(self, menu_id: str):
         menu = await self.check_menu.check_id(menu_id, self.session)
         await self.service.delete(menu, self.session)
-        self.background_tasks.add_task(self.cache.clear_cache('menu', menu_id))
-        self.background_tasks.add_task(self.cache.clear_cache('menu', 'list'))
+        self.background_tasks.add_task(await self.cache.clear_cache('menu', menu_id))
+        self.background_tasks.add_task(await self.cache.clear_cache('menu', 'list'))
         return StatusMessage(
             status=True,
             message='The menu has been deleted',
