@@ -22,10 +22,10 @@ services:
     env_file:
       - .env
     entrypoint: >
-      sh -c "
+      sh -c '
         alembic upgrade head &&
         uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
-      "
+      '
     restart: always
     volumes:
       - .:/app
@@ -47,9 +47,64 @@ services:
     networks:
       - web_network
     healthcheck:
-      test: ["CMD-SHELL", "redis-cli", "ping"]
+      test: ['CMD-SHELL', 'redis-cli', 'ping']
       interval: 5s
       timeout: 20s
+      retries: 20
+
+  celery:
+    build: .
+    volumes:
+      - .:/app
+    entrypoint: >
+      sh -c '
+        celery -A src.tasks.worker.app worker -E -l info
+      '
+    env_file:
+      - .env
+    depends_on:
+      - rabbitmq
+    networks:
+      - web_network
+
+  celery-beat:
+    build: .
+    volumes:
+      - .:/app
+    entrypoint: >
+      sh -c '
+        celery -A src.tasks.tasks.app beat -l info
+      '
+    depends_on:
+      - web
+      - celery
+    networks:
+      - web_network
+
+  rabbitmq:
+    image: rabbitmq:latest
+    container_name: rabbitmq
+    restart: always
+    hostname: rabbitmq
+    env_file:
+      - .env
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
+    volumes:
+      - ./rabbitmq:/var/lib/rabbitmq
+    expose:
+      - 5672
+      - 15692
+    ports:
+      - '5672:5672'
+      - '15692:15692'
+    networks:
+      - web_network
+    healthcheck:
+      test: [ 'CMD', 'rabbitmq-diagnostics', '-q', 'ping' ]
+      interval: 10s
+      timeout: 30s
       retries: 20
 
 networks:

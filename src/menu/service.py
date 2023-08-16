@@ -1,4 +1,5 @@
 from fastapi import Depends
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import get_async_session
@@ -6,7 +7,7 @@ from src.menu.models import Menu
 from src.menu.schemas import MenuCreate, MenuUpdate
 from src.schemas import StatusMessage
 from src.service import BaseService
-from src.utils import clear_cache, get_cache, set_cache, CheckIdTitleExist
+from src.utils import CheckIdTitleExist, clear_cache, get_cache, set_cache
 
 
 class MenuService:
@@ -15,9 +16,9 @@ class MenuService:
         self.service = service
         self.check_menu = CheckIdTitleExist(Menu)
 
-    async def create_menu(self, menu: MenuCreate):
+    async def create_menu(self, menu: MenuCreate, menu_id: str | None = None):
         await self.check_menu.check_title(menu.title, self.session)
-        menu = await self.service.create(menu, self.session)
+        menu = await self.service.create(menu, self.session, id=menu_id)
         await set_cache('menu', menu.id, menu)
         await clear_cache('menu', 'list')
         return menu
@@ -60,6 +61,20 @@ class MenuService:
             status=True,
             message='The menu has been deleted',
         )
+
+    async def update_data_from_file(self, menu_data: dict) -> None:
+        all_menu_id = await self.session.execute(select(Menu.id))
+        await self.session.commit()
+        for menu_id in all_menu_id.all():
+            menu_id = menu_id[0]
+            if menu_id in menu_data:
+                await self.update_menu(menu_id, MenuUpdate(**menu_data[menu_id]))
+
+                menu_data.pop(menu_id)
+            else:
+                await self.delete_menu(menu_id)
+        for menu_id, data in menu_data.items():
+            await self.create_menu(MenuCreate(**data), menu_id=menu_id)
 
 
 async def menu_service(session: AsyncSession = Depends(get_async_session)):

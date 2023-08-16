@@ -20,9 +20,9 @@ class BaseService:
         db_objs = await session.execute(select(self.model))
         return db_objs.scalars().all()
 
-    async def create(self, obj_in: SchemaBase, session: AsyncSession):
+    async def create(self, obj_in: SchemaBase, session: AsyncSession, id: str | None = None):
         obj_in_data = obj_in.model_dump()
-        db_obj = self.model(**obj_in_data)
+        db_obj = self.model(**obj_in_data, id=id)
         session.add(db_obj)
         await session.commit()
         await session.refresh(db_obj)
@@ -50,17 +50,19 @@ class BaseService:
             select(self.model).where(self.model.menu_id == obj_id))
         return subobjects.scalars().all()
 
-    async def create_subobject(self, obj_id: str, obj_in: SchemaBase, session: AsyncSession):
+    async def create_subobject(self, obj_id: str, obj_in: SchemaBase,
+                               session: AsyncSession, id: str | None = None):
         new_data = obj_in.model_dump()
-        db_subobj = self.model(**new_data, menu_id=obj_id)
+        db_subobj = self.model(**new_data, menu_id=obj_id, id=id)
         session.add(db_subobj)
         await session.commit()
         await session.refresh(db_subobj)
         return db_subobj
 
-    async def create_dish(self, obj_id: str, obj_in: SchemaBase, session: AsyncSession):
+    async def create_dish(self, obj_id: str, obj_in: SchemaBase,
+                          session: AsyncSession, id: str | None = None):
         new_data = obj_in.model_dump()
-        db_subobj = self.model(**new_data, submenu_id=obj_id)
+        db_subobj = self.model(**new_data, submenu_id=obj_id, id=id)
         session.add(db_subobj)
         await session.commit()
         await session.refresh(db_subobj)

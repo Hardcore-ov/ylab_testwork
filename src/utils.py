@@ -1,10 +1,12 @@
 import json
 import uuid
-from fastapi.encoders import jsonable_encoder
-from fastapi import HTTPException
 from http import HTTPStatus
+
+from fastapi import HTTPException
+from fastapi.encoders import jsonable_encoder
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.database import redis
 
 

@@ -1,14 +1,14 @@
 from fastapi import Depends
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import get_async_session
 from src.dish.models import Dish
-from src.submenu.models import Submenu
 from src.dish.schemas import DishCreate, DishUpdate
 from src.schemas import StatusMessage
 from src.service import BaseService
-from src.utils import clear_cache, get_cache, set_cache
-from src.utils import CheckIdTitleExist
+from src.submenu.models import Submenu
+from src.utils import CheckIdTitleExist, clear_cache, get_cache, set_cache
 
 
 class DishService:
@@ -18,10 +18,10 @@ class DishService:
         self.check_dish = CheckIdTitleExist(Dish)
         self.check_submenu = CheckIdTitleExist(Submenu)
 
-    async def create_dish(self, submenu_id: str, dish: DishCreate):
+    async def create_dish(self, submenu_id: str, dish: DishCreate, dish_id: str | None = None):
         await self.check_submenu.check_id(submenu_id, self.session)
         await self.check_dish.check_title(dish.title, self.session)
-        dish = await self.service.create_dish(submenu_id, dish, self.session)
+        dish = await self.service.create_dish(submenu_id, dish, self.session, id=dish_id)
         await set_cache('dish', dish.id, dish)
         await clear_cache(submenu_id, 'dish')
         await clear_cache('submenu', submenu_id)
@@ -66,6 +66,23 @@ class DishService:
             status=True,
             message='The dish has been deleted',
         )
+
+    async def update_data_from_file(self, dish_data: dict) -> None:
+        all_dish_id = await self.session.execute(select(Dish.id))
+        await self.session.commit()
+        all_dish_id = all_dish_id.all()
+        for dish_id in all_dish_id:
+            dish_id = dish_id[0]
+            if dish_id in dish_data:
+                data = dish_data[dish_id]
+                data.pop('submenu_id')
+                await self.update_dish(dish_id, DishUpdate(**data))
+                dish_data.pop(dish_id)
+            else:
+                await self.delete_dish(dish_id)
+        for dish_id, data in dish_data.items():
+            submenu_id = data.pop('submenu_id')
+            await self.create_dish(submenu_id, DishCreate(**data), dish_id)
 
 
 async def dish_service(session: AsyncSession = Depends(get_async_session)):

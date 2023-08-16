@@ -49,7 +49,21 @@ docker-compose -f docker-compose-tests.yml up
 
 Сервер запущен по адресу http://127.0.0.1:8000 и можно теперь посылать API запросы.
 
-Документация доступна по адресу ```http://127.0.0.1:8000/docs```
+<a name="headers"><h2>Документация</h2></a>
+
+Документация доступна по адресу ```http://127.0.0.1:8000/docs``` и ```http://127.0.0.1:8000/redoc```
+
+База изначально пустая для запуска тестов Postman.
+
+Для того чтобы наполнить базу воспользуйтесь эндпоинтом:
+```
+/api/v1/update_from_file/manual
+```
+
+После загрузки данных из excel-файла все изменения в файле **Menu.xlsx** в папке **admin**
+будут автоматически внесены в базу данных с помощью фоновой задачи Celery.
+
+Cgt
 
 ### Menus
 - **POST**   ```/api/v1/menus```создание меню
@@ -71,3 +85,14 @@ docker-compose -f docker-compose-tests.yml up
 - **PATCH** ```/api/v1/menus/{menu_id}/submenus/{submenu_id}/dishes/{dish_id}``` обновление блюда
 - **GET**   ```/api/v1/menus/{menu_id}/submenus/{submenu_id}/dishes/{dish_id}``` просмотр определенного блюда
 - **DELETE** ```/api/v1/menus/{menu_id}/submenus/{submenu_id}/dishes/{dish_id}``` удаление блюда
+
+
+### Заданя со звездочкой:
+
+ДЗ 2:
+\* Реализовать вывод количества подменю и блюд для Меню через один (сложный) ORM запрос. 
+[Реализация меню](src/menu/model.py)
+[Реализация подменю](src/submenu/model.py)
+
+ДЗ 3:
+\* Описать ручки API в соответствий c OpenAPI [Документация тут](#headers)
