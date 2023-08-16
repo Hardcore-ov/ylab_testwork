@@ -1,4 +1,4 @@
-from fastapi import Depends
+from fastapi import Depends, BackgroundTasks
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -8,7 +8,7 @@ from src.dish.schemas import DishCreate, DishUpdate
 from src.schemas import StatusMessage
 from src.service import BaseService
 from src.submenu.models import Submenu
-from src.utils import CheckIdTitleExist, clear_cache, get_cache, set_cache
+from src.utils import CheckIdTitleExist, Cache
 
 
 class DishService:
@@ -17,51 +17,53 @@ class DishService:
         self.service = service
         self.check_dish = CheckIdTitleExist(Dish)
         self.check_submenu = CheckIdTitleExist(Submenu)
+        self.cache = Cache()
+        self.background_tasks: BackgroundTasks = BackgroundTasks()
 
     async def create_dish(self, submenu_id: str, dish: DishCreate, dish_id: str | None = None):
         await self.check_submenu.check_id(submenu_id, self.session)
         await self.check_dish.check_title(dish.title, self.session)
         dish = await self.service.create_dish(submenu_id, dish, self.session, id=dish_id)
-        await set_cache('dish', dish.id, dish)
-        await clear_cache(submenu_id, 'dish')
-        await clear_cache('submenu', submenu_id)
-        await clear_cache('menu', 'list')
+        self.background_tasks.add_task(self.cache.set_cache('dish', dish.id, dish))
+        self.background_tasks.add_task(self.cache.clear_cache(submenu_id, 'dish'))
+        self.background_tasks.add_task(self.cache.clear_cache('submenu', submenu_id))
+        self.background_tasks.add_task(self.cache.clear_cache('menu', 'list'))
         return dish
 
     async def get_dish_list(self, submenu_id: str):
-        cached = await get_cache(submenu_id, 'dish')
+        cached = await self.cache.get_cache(submenu_id, 'dish')
         if cached:
             print('from cache')
             return cached
         dish_list = await self.service.read_all_dishes(submenu_id, self.session)
-        await set_cache(submenu_id, 'dish', dish_list)
+        self.background_tasks.add_task(self.cache.set_cache(submenu_id, 'dish', dish_list))
         return dish_list
 
     async def get_dish(self, dish_id: str):
-        cached = await get_cache('dish', dish_id)
+        cached = await self.cache.get_cache('dish', dish_id)
         if cached:
             print('from cache')
             return cached
         await self.check_dish.check_id(dish_id, self.session)
         dish = await self.service.get_one(dish_id, self.session)
-        await set_cache('dish', dish_id, dish)
+        self.background_tasks.add_task(self.cache.set_cache('dish', dish_id, dish))
         return dish
 
     async def update_dish(self, dish_id: str, obj_in: DishUpdate):
         dish = await self.check_dish.check_id(dish_id, self.session)
         dish = await self.service.update(dish, obj_in, self.session)
-        await set_cache('dish', dish_id, dish)
-        await clear_cache(dish.submenu_id, 'dish')
-        await clear_cache('submenu', dish.submenu_id)
-        await clear_cache('menu', 'list')
+        self.background_tasks.add_task(self.cache.set_cache('dish', dish_id, dish))
+        self.background_tasks.add_task(self.cache.clear_cache(dish.submenu_id, 'dish'))
+        self.background_tasks.add_task(self.cache.clear_cache('submenu', dish.submenu_id))
+        self.background_tasks.add_task(self.cache.clear_cache('menu', 'list'))
         return dish
 
     async def delete_dish(self, dish_id: str):
         dish = await self.check_dish.check_id(dish_id, self.session)
         await self.service.delete(dish, self.session)
-        await clear_cache('dish', dish_id)
-        await clear_cache(dish.submenu_id, 'dish')
-        await clear_cache('menu', 'list')
+        self.background_tasks.add_task(self.cache.clear_cache('dish', dish_id))
+        self.background_tasks.add_task(self.cache.clear_cache(dish.submenu_id, 'dish'))
+        self.background_tasks.add_task(self.cache.clear_cache('menu', 'list'))
         return StatusMessage(
             status=True,
             message='The dish has been deleted',
