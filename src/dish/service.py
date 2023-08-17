@@ -54,8 +54,9 @@ class DishService:
             return cached
         await self.check_dish.check_id(dish_id, self.session)
         dish = await self.service.get_one(dish_id, self.session)
-        dish = jsonable_encoder(dish)
-        dish['price'] = discount(dish['price'], dish['discount'])
+        if dish is not None:
+            dish = jsonable_encoder(dish)
+            dish['price'] = discount(dish['price'], dish['discount'])
         self.background_tasks.add_task(await self.cache.set_cache('dish', dish_id, dish))
         return dish
 
