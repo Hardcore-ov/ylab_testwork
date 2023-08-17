@@ -31,18 +31,15 @@ class TestMenu:
         assert isinstance(resp_data, list)
         assert len(resp_data) == 1
 
-    # async def test_get_all_menu(self, async_client: AsyncClient, create_menu, create_submenu, create_dish):
-    #     menu = create_menu
-    #     submenu = create_submenu(menu.id)
-    #     dish = create_dish(submenu.id)
-    #     response = await async_client.get('/api/v1/menus/all/')
-    #     assert response.status_code == 200
-    #     resp_data = response.json()
-    #     assert isinstance(resp_data, list)
-    #     assert len(resp_data) == 1
+    async def test_get_all_menu(self, clear_db, async_client: AsyncClient, create_dish):
+        response = await async_client.get('/api/v1/menus/all/')
+        assert response.status_code == 200
+        resp_data = response.json()
+        assert resp_data[0]['title'] == 'My menu 1'
+        assert resp_data[0]['submenus'][0]['title'] == 'My submenu 1'
+        assert resp_data[0]['submenus'][0]['dishes'][0]['title'] == 'My dish 1'
 
     async def test_get_menu_by_id(self, clear_db, async_client: AsyncClient, create_menu):
-
         menu = create_menu
         id_response = await async_client.get(f'/api/v1/menus/{menu.id}')
         id_resp_data = id_response.json()
