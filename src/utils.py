@@ -1,6 +1,7 @@
 import json
 import uuid
 from http import HTTPStatus
+from typing import Any
 
 from fastapi import HTTPException
 from fastapi.encoders import jsonable_encoder
@@ -8,10 +9,25 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import redis
+from src.schemas import StatusMessage
 
 
 def generate_uuid():
     return str(uuid.uuid4())
+
+
+def discount(price: Any, dis: Any):
+    if dis != 0:
+        try:
+            price = format((float(price) - float(price) * int(dis) * 0.01), '.2f')
+        except ValueError:
+            return StatusMessage(
+                status=False,
+                message='Discount field must be an integer number!',
+            )
+    else:
+        return price
+    return price
 
 
 class Cache:

@@ -1,4 +1,4 @@
-from fastapi import Depends, BackgroundTasks
+from fastapi import BackgroundTasks, Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -7,8 +7,7 @@ from src.menu.models import Menu
 from src.menu.schemas import MenuCreate, MenuUpdate
 from src.schemas import StatusMessage
 from src.service import BaseService
-from src.utils import CheckIdTitleExist
-from src.utils import Cache
+from src.utils import Cache, CheckIdTitleExist
 
 
 class MenuService:

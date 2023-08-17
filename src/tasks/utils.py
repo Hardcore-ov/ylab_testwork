@@ -49,10 +49,19 @@ def get_data_from_excel_file():
                 }
                 submenu_id = str(UUID(row[1]))
             if row[2] and is_id(row[2]):
+                if row[6] is not None:
+                    try:
+                        int(row[6])
+                    except ValueError:
+                        return False
+                    discount = int(row[6])
+                else:
+                    discount = 0
                 dishes[str(UUID(row[2]))] = {
                     'title': row[3],
                     'description': row[4],
                     'price': row[5],
+                    'discount': discount,
                     'submenu_id': submenu_id
                 }
         return menus, submenus, dishes

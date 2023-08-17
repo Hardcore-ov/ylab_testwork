@@ -1,4 +1,5 @@
-from fastapi import Depends, BackgroundTasks
+from fastapi import BackgroundTasks, Depends
+from fastapi.encoders import jsonable_encoder
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -8,7 +9,7 @@ from src.dish.schemas import DishCreate, DishUpdate
 from src.schemas import StatusMessage
 from src.service import BaseService
 from src.submenu.models import Submenu
-from src.utils import CheckIdTitleExist, Cache
+from src.utils import Cache, CheckIdTitleExist, discount
 
 
 class DishService:
@@ -33,19 +34,28 @@ class DishService:
     async def get_dish_list(self, submenu_id: str):
         cached = await self.cache.get_cache(submenu_id, 'dish')
         if cached:
+            for index, cache in enumerate(cached):
+                cached[index]['price'] = discount(cache['price'], cache['discount'])
             print('from cache')
             return cached
         dish_list = await self.service.read_all_dishes(submenu_id, self.session)
+        for index, dish in enumerate(dish_list):
+            dish = jsonable_encoder(dish)
+            dish['price'] = discount(dish['price'], dish['discount'])
+            dish_list[index] = dish
         self.background_tasks.add_task(await self.cache.set_cache(submenu_id, 'dish', dish_list))
         return dish_list
 
     async def get_dish(self, dish_id: str):
         cached = await self.cache.get_cache('dish', dish_id)
         if cached:
+            cached['price'] = discount(cached['price'], cached['discount'])
             print('from cache')
             return cached
         await self.check_dish.check_id(dish_id, self.session)
         dish = await self.service.get_one(dish_id, self.session)
+        dish = jsonable_encoder(dish)
+        dish['price'] = discount(dish['price'], dish['discount'])
         self.background_tasks.add_task(await self.cache.set_cache('dish', dish_id, dish))
         return dish
 

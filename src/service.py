@@ -71,7 +71,8 @@ class BaseService:
     async def read_all_dishes(self, obj_id: str, session: AsyncSession):
         subobjects = await session.execute(
             select(self.model).where(self.model.submenu_id == obj_id))
-        return subobjects.scalars().all()
+        subobjects = subobjects.scalars().all()
+        return subobjects
 
     async def read_all_menu(self, session):
         result = await session.scalars(

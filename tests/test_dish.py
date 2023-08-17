@@ -19,6 +19,7 @@ class TestDish:
         assert resp_data['title'] == dish_data['title']
         assert resp_data['description'] == dish_data['description']
         assert resp_data['price'] == dish_data['price']
+        assert resp_data['discount'] == int(dish_data['discount'])
 
     async def test_get_dish_list(self, clear_db, async_client: AsyncClient, create_dish):
         menu = db.query(Menu).first()
@@ -42,13 +43,14 @@ class TestDish:
         dish = create_dish
         menu = db.query(Menu).first()
         submenu = db.query(Submenu).filter_by(menu_id=menu.id).first()
-        response = await async_client.get(f'/api/v1/menus/{menu.id}/submenus/' f'{submenu.id}/dishes/{dish.id}')
+        response = await async_client.get(f'/api/v1/menus/{menu.id}/submenus/{submenu.id}/dishes/{dish.id}')
         resp_data = response.json()
         assert response.status_code == 200
         assert sorted(list(resp_data.keys())) == dish_keys
         assert resp_data['title'] == dish_data['title']
         assert resp_data['description'] == dish_data['description']
         assert resp_data['price'] == dish_data['price']
+        assert resp_data['discount'] == int(dish_data['discount'])
 
     async def test_get_dish_not_found(self, clear_db, async_client: AsyncClient, create_submenu):
 
@@ -72,6 +74,7 @@ class TestDish:
         assert resp_data['title'] == updated_dish_data['title']
         assert resp_data['description'] == updated_dish_data['description']
         assert resp_data['price'] == updated_dish_data['price']
+        assert resp_data['discount'] == int(updated_dish_data['discount'])
 
     async def test_patch_dish_not_found(self, clear_db, async_client: AsyncClient, create_submenu):
 

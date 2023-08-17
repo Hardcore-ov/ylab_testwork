@@ -9,6 +9,7 @@ from src.dish.models import Dish
 from src.dish.service import DishService
 from src.menu.models import Menu
 from src.menu.service import MenuService
+from src.schemas import StatusMessage
 from src.service import BaseService
 from src.submenu.models import Submenu
 from src.submenu.service import SubmenuService
@@ -38,7 +39,13 @@ async def check_and_update_excel_file(session: AsyncSession):
     if is_change():
         new_data = get_data_from_excel_file()
         await update_data(new_data, session)
-        return {'result': 'Beginning to update!'}
+        if new_data is False:
+            return StatusMessage(
+                status=False,
+                message='Discount field must be an integer number!',
+            )
+        else:
+            return {'result': 'Begin to update!'}
     return {'result': 'No data to change'}
 
 
@@ -65,6 +72,11 @@ async def update_dish(dish_data: dict,
 
 async def update_data(excel_data: tuple,
                       session: AsyncSession = Depends(get_async_session)):
+    if excel_data is False:
+        return StatusMessage(
+            status=False,
+            message='Discount field must be an integer number!',
+        )
     menu_data, submenu_data, dish_data = excel_data
     await update_menu(menu_data, session)
     await update_submenu(submenu_data, session)
