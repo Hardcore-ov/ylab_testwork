@@ -16,7 +16,7 @@ def is_change(delay: int = 15) -> bool:
     return delta_time <= timedelta(seconds=delay)
 
 
-def is_id(cell) -> bool:
+def is_id(cell: str) -> bool:
     try:
         UUID(cell)
         return True

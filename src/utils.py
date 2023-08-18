@@ -16,7 +16,7 @@ def generate_uuid():
     return str(uuid.uuid4())
 
 
-def discount(price: Any, dis: Any):
+def discount(price: str, dis: str):
     if dis != 0:
         try:
             price = format((float(price) - float(price) * int(dis) * 0.01), '.2f')
@@ -32,20 +32,20 @@ def discount(price: Any, dis: Any):
 
 class Cache:
 
-    def generate_key(self, prefix, body):
+    def generate_key(self, prefix: str, body: str):
         key = f'{prefix}:{body}'
         return key
 
-    async def get_cache(self, prefix, body):
+    async def get_cache(self, prefix: str, body: str):
         key = self.generate_key(prefix, body)
         value = await redis.get(key)
         return json.loads(value) if value else None
 
-    async def set_cache(self, prefix, body, value):
+    async def set_cache(self, prefix: str, body: str, value: Any):
         key = self.generate_key(prefix, body)
         await redis.set(key, json.dumps(jsonable_encoder(value)))
 
-    async def clear_cache(self, prefix, body):
+    async def clear_cache(self, prefix: str, body: str):
         key = self.generate_key(prefix, body)
         keys = await redis.keys(f'{key}*')
         if keys:

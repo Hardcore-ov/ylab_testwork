@@ -1,5 +1,8 @@
+from typing import Coroutine
+
 from httpx import AsyncClient
 
+from src.dish.models import Dish
 from src.menu.models import Menu
 from src.submenu.models import Submenu
 from tests.conftest import db
@@ -7,7 +10,7 @@ from tests.test_data import dish_data, dish_keys, updated_dish_data
 
 
 class TestDish:
-    async def test_create_dish(self, clear_db, async_client: AsyncClient, create_submenu):
+    async def test_create_dish(self, clear_db: Coroutine, async_client: AsyncClient, create_submenu: Submenu):
         submenu = create_submenu
         menu_id = submenu.__getattribute__('menu_id')
         submenu_id = submenu.__getattribute__('id')
@@ -20,7 +23,7 @@ class TestDish:
         assert resp_data['description'] == dish_data['description']
         assert resp_data['price'] == dish_data['price']
 
-    async def test_get_dish_list(self, clear_db, async_client: AsyncClient, create_dish):
+    async def test_get_dish_list(self, clear_db: Coroutine, async_client: AsyncClient, create_dish: Dish):
         menu = db.query(Menu).first()
         submenu = db.query(Submenu).filter_by(menu_id=menu.id).first()
         response = await async_client.get(f'/api/v1/menus/{menu.id}/submenus/{submenu.id}/dishes/')
@@ -29,7 +32,7 @@ class TestDish:
         assert isinstance(resp_data, list)
         assert len(resp_data) == 1
 
-    async def test_get_empty_dish_list(self, clear_db, async_client: AsyncClient, create_submenu):
+    async def test_get_empty_dish_list(self, clear_db: Coroutine, async_client: AsyncClient, create_submenu: Submenu):
 
         submenu = create_submenu
         response = await async_client.get(f'/api/v1/menus/{submenu.menu_id}/submenus/{submenu.id}/dishes/')
@@ -37,7 +40,7 @@ class TestDish:
         resp_data = response.json()
         assert resp_data == []
 
-    async def test_get_dish_by_id(self, clear_db, async_client: AsyncClient, create_dish):
+    async def test_get_dish_by_id(self, clear_db: Coroutine, async_client: AsyncClient, create_dish: Dish):
 
         dish = create_dish
         menu = db.query(Menu).first()
@@ -50,7 +53,7 @@ class TestDish:
         assert resp_data['description'] == dish_data['description']
         assert resp_data['price'] == dish_data['price']
 
-    async def test_get_dish_not_found(self, clear_db, async_client: AsyncClient, create_submenu):
+    async def test_get_dish_not_found(self, clear_db: Coroutine, async_client: AsyncClient, create_submenu: Submenu):
 
         submenu = create_submenu
         dish_id = 'fake_id'
@@ -59,7 +62,7 @@ class TestDish:
         resp_data = subresp.json()
         assert resp_data['detail'] == 'dish not found'
 
-    async def test_update_dish(self, clear_db, async_client: AsyncClient, create_dish):
+    async def test_update_dish(self, clear_db: Coroutine, async_client: AsyncClient, create_dish: Dish):
 
         dish = create_dish
         menu = db.query(Menu).first()
@@ -73,7 +76,7 @@ class TestDish:
         assert resp_data['description'] == updated_dish_data['description']
         assert resp_data['price'] == updated_dish_data['price']
 
-    async def test_patch_dish_not_found(self, clear_db, async_client: AsyncClient, create_submenu):
+    async def test_patch_dish_not_found(self, clear_db: Coroutine, async_client: AsyncClient, create_submenu: Submenu):
 
         submenu = create_submenu
         dish_id = 'fake_id'
@@ -83,7 +86,7 @@ class TestDish:
         resp_data = response.json()
         assert resp_data['detail'] == 'dish not found'
 
-    async def test_delete_dish(self, clear_db, async_client: AsyncClient, create_dish):
+    async def test_delete_dish(self, clear_db: Coroutine, async_client: AsyncClient, create_dish: Dish):
 
         dish = create_dish
         menu = db.query(Menu).first()

@@ -1,16 +1,20 @@
+from typing import Coroutine
+
 from httpx import AsyncClient
 
+from src.dish.models import Dish
+from src.menu.models import Menu
 from tests.test_data import menu_data, menu_keys, updated_menu_data
 
 
 class TestMenu:
-    async def test_get_empty_menu_list(self, clear_db, async_client: AsyncClient):
+    async def test_get_empty_menu_list(self, clear_db: Coroutine, async_client: AsyncClient):
         response = await async_client.get('/api/v1/menus/')
         assert response.status_code == 200
         resp_data = response.json()
         assert resp_data == []
 
-    async def test_create_menu(self, clear_db, async_client: AsyncClient):
+    async def test_create_menu(self, clear_db: Coroutine, async_client: AsyncClient):
 
         response = await async_client.post('/api/v1/menus/',
                                            json=menu_data)
@@ -23,7 +27,7 @@ class TestMenu:
         assert resp_data['submenus_count'] == 0
         assert resp_data['dishes_count'] == 0
 
-    async def test_get_menu_list(self, clear_db, async_client: AsyncClient, create_menu):
+    async def test_get_menu_list(self, clear_db: Coroutine, async_client: AsyncClient, create_menu: Menu):
 
         response = await async_client.get('/api/v1/menus/')
         assert response.status_code == 200
@@ -31,7 +35,7 @@ class TestMenu:
         assert isinstance(resp_data, list)
         assert len(resp_data) == 1
 
-    async def test_get_all_menu(self, clear_db, async_client: AsyncClient, create_dish):
+    async def test_get_all_menu(self, clear_db: Coroutine, async_client: AsyncClient, create_dish: Dish):
         response = await async_client.get('/api/v1/menus/all/')
         assert response.status_code == 200
         resp_data = response.json()
@@ -39,7 +43,7 @@ class TestMenu:
         assert resp_data[0]['submenus'][0]['title'] == 'My submenu 1'
         assert resp_data[0]['submenus'][0]['dishes'][0]['title'] == 'My dish 1'
 
-    async def test_get_menu_by_id(self, clear_db, async_client: AsyncClient, create_menu):
+    async def test_get_menu_by_id(self, clear_db: Coroutine, async_client: AsyncClient, create_menu: Menu):
         menu = create_menu
         id_response = await async_client.get(f'/api/v1/menus/{menu.id}')
         id_resp_data = id_response.json()
@@ -50,7 +54,7 @@ class TestMenu:
         assert id_resp_data['submenus_count'] == 0
         assert id_resp_data['dishes_count'] == 0
 
-    async def test_get_menu_not_found(self, clear_db, async_client: AsyncClient, create_menu):
+    async def test_get_menu_not_found(self, clear_db: Coroutine, async_client: AsyncClient, create_menu: Menu):
 
         menu_id = 'fake_id'
         response = await async_client.get(f'/api/v1/menus/{menu_id}')
@@ -58,7 +62,7 @@ class TestMenu:
         resp_data = response.json()
         assert resp_data['detail'] == 'menu not found'
 
-    async def test_update_menu(self, clear_db, async_client: AsyncClient, create_menu):
+    async def test_update_menu(self, clear_db: Coroutine, async_client: AsyncClient, create_menu: Menu):
 
         menu = create_menu
         patch_resp = await async_client.patch(f'/api/v1/menus/{menu.id}',
@@ -71,7 +75,7 @@ class TestMenu:
         assert patch_data['submenus_count'] == 0
         assert patch_data['dishes_count'] == 0
 
-    async def test_patch_menu_not_found(self, clear_db, async_client: AsyncClient):
+    async def test_patch_menu_not_found(self, clear_db: Coroutine, async_client: AsyncClient):
 
         menu_id = 'fake_id'
         response = await async_client.patch(f'/api/v1/menus/{menu_id}',
@@ -80,7 +84,7 @@ class TestMenu:
         resp_data = response.json()
         assert resp_data['detail'] == 'menu not found'
 
-    async def test_delete_menu(self, clear_db, async_client: AsyncClient, create_menu):
+    async def test_delete_menu(self, clear_db: Coroutine, async_client: AsyncClient, create_menu: Menu):
 
         menu = create_menu
         delete_resp = await async_client.delete(f'/api/v1/menus/{menu.id}')

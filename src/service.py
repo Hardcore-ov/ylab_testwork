@@ -74,7 +74,7 @@ class BaseService:
         subobjects = subobjects.scalars().all()
         return subobjects
 
-    async def read_all_menu(self, session):
+    async def read_all_menu(self, session: AsyncSession):
         result = await session.scalars(
             select(self.model).options(
                 joinedload(self.model.submenus).joinedload(Submenu.dishes)

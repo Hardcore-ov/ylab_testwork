@@ -1,3 +1,5 @@
+from typing import Coroutine
+
 import pytest
 from httpx import AsyncClient
 
@@ -14,7 +16,7 @@ from tests.test_data import (
 
 class TestPostman:
 
-    async def test_create_menu(self, clear_db, async_client: AsyncClient):
+    async def test_create_menu(self, clear_db: Coroutine, async_client: AsyncClient):
         print('start tests')
         response = await async_client.post('/api/v1/menus/',
                                            json=menu_data)
