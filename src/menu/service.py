@@ -44,7 +44,12 @@ class MenuService:
         return menu_list
 
     async def get_all_menu(self):
+        cached = await self.cache.get_cache('menu', 'all')
+        if cached:
+            print('from cache')
+            return cached
         menu_all = await self.service.read_all_menu(self.session)
+        self.background_tasks.add_task(await self.cache.set_cache('menu', 'all', menu_all))
         return menu_all
 
     async def update_menu(self, menu_id: str, obj_in: MenuUpdate):
@@ -52,6 +57,7 @@ class MenuService:
         menu = await self.service.update(menu, obj_in, self.session)
         self.background_tasks.add_task(await self.cache.set_cache('menu', menu.id, menu))
         self.background_tasks.add_task(await self.cache.clear_cache('menu', 'list'))
+        self.background_tasks.add_task(await self.cache.clear_cache('menu', 'all'))
         return menu
 
     async def delete_menu(self, menu_id: str):
@@ -59,6 +65,7 @@ class MenuService:
         await self.service.delete(menu, self.session)
         self.background_tasks.add_task(await self.cache.clear_cache('menu', menu_id))
         self.background_tasks.add_task(await self.cache.clear_cache('menu', 'list'))
+        self.background_tasks.add_task(await self.cache.clear_cache('menu', 'all'))
         return StatusMessage(
             status=True,
             message='The menu has been deleted',
